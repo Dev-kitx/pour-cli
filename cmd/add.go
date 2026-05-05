@@ -117,7 +117,9 @@ func installFromRepo(repo, agent, skillFilter string, global bool) {
 			continue
 		}
 
-		installer.RecordInstall(skill.Name, skill.Description, agent, repo, path)
+		if err := installer.RecordInstall(skill.Name, skill.Description, agent, repo, path); err != nil {
+				ui.Error("Failed to record install: " + err.Error())
+			}
 		ui.SpinnerSuccess(spin, "Installed "+ui.SkillBadge(skill.Name))
 		installed = append(installed, skill.Name)
 	}

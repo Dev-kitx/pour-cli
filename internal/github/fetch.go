@@ -184,7 +184,7 @@ func SearchRegistry(query string) ([]SearchResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("registry unavailable: %s", resp.Status)
@@ -246,7 +246,7 @@ func SearchSkills(query, token string) ([]SearchResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode == 403 {
 		return nil, fmt.Errorf("rate limit exceeded — run `pour auth login` to add a GitHub token")
@@ -309,7 +309,7 @@ func SearchSkillsSH(query string) ([]SearchResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("skills.sh unavailable: %s", resp.Status)
@@ -377,19 +377,6 @@ func fetchContents(url, token string) ([]ghContent, error) {
 	return items, nil
 }
 
-func fetchFileContent(url, token string) (string, error) {
-	body, err := doRequest(url, token)
-	if err != nil {
-		return "", err
-	}
-
-	var item ghContent
-	if err := json.Unmarshal(body, &item); err != nil {
-		return "", err
-	}
-
-	return decodeContent(item)
-}
 
 func decodeContent(item ghContent) (string, error) {
 	if item.Encoding == "base64" {
@@ -405,7 +392,7 @@ func decodeContent(item ghContent) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 		data, err := io.ReadAll(resp.Body)
 		return string(data), err
 	}
@@ -426,7 +413,7 @@ func doRequest(url, token string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode == 404 {
 		return nil, fmt.Errorf("not found")
@@ -495,10 +482,3 @@ func extractDescription(content string) string {
 	return "No description"
 }
 
-func extractSkillName(path string) string {
-	parts := strings.Split(path, "/")
-	if len(parts) > 0 {
-		return parts[len(parts)-1]
-	}
-	return path
-}

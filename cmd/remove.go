@@ -24,7 +24,7 @@ var removeCmd = &cobra.Command{
 func init() {
 	removeCmd.Flags().StringVarP(&removeAgentFlag, "agent", "a", "", "target AI agent")
 	removeCmd.Flags().BoolVarP(&removeGlobalFlag, "global", "g", false, "remove from global install")
-	removeCmd.MarkFlagRequired("agent")
+	_ = removeCmd.MarkFlagRequired("agent")
 }
 
 func runRemove(cmd *cobra.Command, args []string) {
@@ -40,7 +40,9 @@ func runRemove(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	installer.RecordUninstall(skillName, removeAgentFlag)
+	if err := installer.RecordUninstall(skillName, removeAgentFlag); err != nil {
+		ui.Error("Failed to update skills database: " + err.Error())
+	}
 	ui.SpinnerSuccess(spinner, fmt.Sprintf("Removed %s from %s", ui.SkillBadge(skillName), ui.AgentBadge(removeAgentFlag)))
 	fmt.Println()
 }
