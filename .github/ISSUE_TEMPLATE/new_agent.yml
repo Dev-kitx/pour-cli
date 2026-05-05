@@ -1,0 +1,37 @@
+name: Add Agent Support
+description: Request support for a new AI agent
+labels: [agent]
+body:
+  - type: input
+    id: agent
+    label: Agent name
+    placeholder: "my-agent"
+    validations:
+      required: true
+
+  - type: input
+    id: homepage
+    label: Agent homepage / docs
+    placeholder: "https://..."
+    validations:
+      required: true
+
+  - type: input
+    id: project_path
+    label: Project-level skill directory
+    description: Where skills are stored relative to the project root
+    placeholder: ".my-agent/skills"
+    validations:
+      required: true
+
+  - type: input
+    id: global_path
+    label: Global skill directory
+    description: Where skills are stored relative to $HOME
+    placeholder: ".my-agent/skills"
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    label: Additional context

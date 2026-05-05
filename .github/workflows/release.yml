@@ -1,0 +1,106 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+  discussions: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.smart.outputs.tag }}
+      skipped: ${{ steps.smart.outputs.skipped }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Smart Release
+        id: smart
+        uses: Dev-kitx/smart-gh-release@main
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          auto_version: true
+          generate_checksums: false
+          generate_badge: true
+
+  update-docs:
+    name: Update Docs Version
+    needs: release
+    if: needs.release.outputs.skipped != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Patch version in docs
+        run: |
+          TAG="${{ needs.release.outputs.tag }}"
+          sed -i "s/Latest Release · v[0-9][^\"]*/Latest Release · ${TAG}/g" docs/index.html
+
+      - name: Commit if changed
+        run: |
+          git config user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
+          git config user.email "${{ vars.APP_ID }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
+          git add docs/index.html
+          git diff --cached --quiet || git commit -m "chore: update docs version to ${{ needs.release.outputs.tag }}"
+          git push origin main
+
+  binaries:
+    name: Build & Upload Binaries
+    needs: release
+    if: needs.release.outputs.skipped != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+          repositories: pour-cli,homebrew-pour
+
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.release.outputs.tag }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - uses: goreleaser/goreleaser-action@v7
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          GORELEASER_CURRENT_TAG: ${{ needs.release.outputs.tag }}
+          HOMEBREW_TAP_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          APP_ID: ${{ vars.APP_ID }}

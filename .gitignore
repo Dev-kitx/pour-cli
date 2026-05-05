@@ -1,0 +1,19 @@
+# binary
+pour
+pour.exe
+
+# build output
+dist/
+
+# Go
+*.test
+*.out
+coverage.out
+
+# macOS
+.DS_Store
+
+# editor
+.idea/
+.vscode/
+*.swp

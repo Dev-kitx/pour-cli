@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://dev-kitx.github.io/pour-cli
+    about: Read the docs and live demo
+  - name: SKILL.md Spec
+    url: https://dev-kitx.github.io/pour-cli/spec.html
+    about: Learn how to create and publish skills

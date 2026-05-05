@@ -1,0 +1,42 @@
+name: Bug Report
+description: Something isn't working correctly
+labels: [bug]
+body:
+  - type: input
+    id: version
+    label: pour version
+    placeholder: "pour version"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    label: OS / Platform
+    placeholder: "macOS 14, Ubuntu 22.04, Windows 11..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    label: Command you ran
+    placeholder: "pour add owner/repo -a claude"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    label: Expected behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    label: Actual behaviour
+    description: Include the full error output if any
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    label: Additional context
+    description: Repo URL, screenshots, anything else that helps

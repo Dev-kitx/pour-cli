@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>pour — AI Skill Manager</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="shortcut icon" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --purple: #9B59B6;
+      --pink: #FF6B9D;
+      --cyan: #00D4FF;
+      --green: #2ECC71;
+      --yellow: #F1C40F;
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --border: #1e1e2e;
+      --text: #e2e2f0;
+      --muted: #666680;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ── canvas dots ── */
+    #dots-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── layout ── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+    /* ── nav ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      background: rgba(10,10,15,0.7);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 4.5px;
+      line-height: 1.25;
+      font-weight: 400;
+      white-space: pre;
+      background: linear-gradient(135deg, var(--pink), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+      letter-spacing: 0;
+    }
+    .nav-links { display: flex; gap: 28px; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-github {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text) !important;
+      font-size: 0.85rem !important;
+      transition: border-color 0.2s, background 0.2s !important;
+    }
+    .nav-github:hover { border-color: var(--purple) !important; background: rgba(155,89,182,0.1) !important; }
+
+    /* ── hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 100px 24px 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border: 1px solid rgba(155,89,182,0.4);
+      border-radius: 100px;
+      font-size: 0.8rem;
+      color: var(--purple);
+      margin-bottom: 32px;
+      background: rgba(155,89,182,0.08);
+      animation: fadeUp 0.6s ease both;
+    }
+    .badge-dot {
+      width: 6px; height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    .ascii-logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(0.45rem, 1.4vw, 0.75rem);
+      line-height: 1.2;
+      background: linear-gradient(135deg, var(--pink) 0%, var(--purple) 50%, var(--cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 32px;
+      animation: fadeUp 0.6s 0.1s ease both;
+      white-space: pre;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--pink), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--muted);
+      max-width: 560px;
+      line-height: 1.7;
+      margin-bottom: 40px;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 60px;
+      animation: fadeUp 0.6s 0.4s ease both;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      color: white;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: opacity 0.2s, transform 0.2s;
+      box-shadow: 0 4px 24px rgba(155,89,182,0.35);
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    .install-cmd {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--cyan);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .install-cmd:hover { border-color: var(--purple); }
+    .install-cmd .copy-icon { color: var(--muted); font-size: 0.8rem; }
+    .install-cmd .copied { color: var(--green); font-size: 0.75rem; display: none; }
+
+    .hero-agents {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeUp 0.6s 0.5s ease both;
+    }
+    .hero-agents span { color: var(--muted); font-size: 0.85rem; }
+    .agent-pill {
+      padding: 4px 12px;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 0.8rem;
+      color: var(--text);
+      background: var(--surface);
+    }
+
+    /* ── terminal demo ── */
+    .demo-section {
+      padding: 80px 0;
+      position: relative;
+      z-index: 1;
+    }
+    .section-label {
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--purple);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      text-align: center;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      text-align: center;
+      color: var(--muted);
+      font-size: 1rem;
+      margin-bottom: 56px;
+    }
+
+    .terminal-wrap {
+      max-width: 780px;
+      margin: 0 auto;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px var(--border), 0 40px 80px rgba(0,0,0,0.5), 0 0 80px rgba(155,89,182,0.08);
+    }
+    .terminal-bar {
+      background: #1a1a2a;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .t-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .t-dot.red    { background: #FF5F57; }
+    .t-dot.yellow { background: #FEBC2E; }
+    .t-dot.green  { background: #28C840; }
+    .t-title {
+      flex: 1;
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .terminal-body {
+      background: #0d0d18;
+      padding: 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.8;
+      min-height: 360px;
+    }
+
+    .t-line { display: flex; gap: 10px; }
+    .t-prompt { color: var(--purple); user-select: none; }
+    .t-cmd { color: var(--text); }
+    .t-output { color: var(--muted); padding-left: 0; }
+    .t-success { color: var(--green); }
+    .t-highlight { color: var(--cyan); }
+    .t-pink { color: var(--pink); }
+    .t-yellow { color: var(--yellow); }
+    .t-cursor {
+      display: inline-block;
+      width: 8px; height: 15px;
+      background: var(--cyan);
+      vertical-align: middle;
+      animation: blink 1s infinite;
+    }
+
+    /* ── features ── */
+    .features-section {
+      padding: 80px 0;
+      position: relative;
+      z-index: 1;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 56px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .feature-card:hover { border-color: var(--purple); transform: translateY(-3px); }
+    .feature-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 16px;
+    }
+    .feature-card h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 8px; }
+    .feature-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+
+    /* ── commands ── */
+    .commands-section {
+      padding: 80px 0;
+      position: relative;
+      z-index: 1;
+    }
+    .commands-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 16px;
+      margin-top: 56px;
+    }
+    .cmd-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+    .cmd-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--cyan);
+      margin-bottom: 6px;
+    }
+    .cmd-desc { color: var(--muted); font-size: 0.85rem; margin-bottom: 12px; }
+    .cmd-example {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.92rem;
+      color: var(--green);
+      background: rgba(46,204,113,0.05);
+      border: 1px solid rgba(46,204,113,0.2);
+      border-radius: 6px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .cmd-example:hover { border-color: rgba(46,204,113,0.45); background: rgba(46,204,113,0.09); }
+    .cmd-example span { color: var(--pink); }
+    .cmd-example .cmd-text { flex: 1; }
+    .cmd-copy {
+      flex-shrink: 0;
+      color: var(--muted);
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+      opacity: 0;
+      transition: opacity 0.15s;
+      user-select: none;
+    }
+    .cmd-example:hover .cmd-copy { opacity: 1; }
+    .cmd-copy.copied { color: var(--green); opacity: 1; }
+
+    /* ── agents ── */
+    .agents-section {
+      padding: 80px 0;
+      position: relative;
+      z-index: 1;
+    }
+    .agents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-top: 56px;
+    }
+    .agent-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      transition: border-color 0.3s;
+    }
+    .agent-card:hover { border-color: var(--cyan); }
+    .agent-emoji { font-size: 1.8rem; margin-bottom: 10px; }
+    .agent-logo { width: 36px; height: 36px; margin-bottom: 12px; object-fit: contain; filter: brightness(0) invert(1); }
+    .agent-logo-badge {
+      width: 36px; height: 36px; margin-bottom: 12px;
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700;
+      color: white; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+    }
+    .agent-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+    .agent-path { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+
+    /* ── cta ── */
+    .cta-section {
+      padding: 100px 0;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .cta-box {
+      background: linear-gradient(135deg, rgba(155,89,182,0.12), rgba(0,212,255,0.08));
+      border: 1px solid rgba(155,89,182,0.3);
+      border-radius: 24px;
+      padding: 64px 40px;
+    }
+    .cta-box h2 { font-size: clamp(1.8rem, 3vw, 2.8rem); font-weight: 800; margin-bottom: 16px; }
+    .cta-box p { color: var(--muted); font-size: 1.05rem; margin-bottom: 36px; }
+
+    /* ── footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      position: relative;
+      z-index: 1;
+    }
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-inner span { color: var(--muted); font-size: 0.85rem; }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { color: var(--muted); font-size: 0.85rem; text-decoration: none; }
+    .footer-links a:hover { color: var(--text); }
+
+    /* ── divider ── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<canvas id="dots-canvas"></canvas>
+
+<!-- nav -->
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">██████╗  ██████╗ ██╗   ██╗██████╗
+██╔══██╗██╔═══██╗██║   ██║██╔══██╗
+██████╔╝██║   ██║██║   ██║██████╔╝
+██╔═══╝ ██║   ██║██║   ██║██╔══██╗
+██║     ╚██████╔╝╚██████╔╝██║  ██║
+╚═╝      ╚═════╝  ╚═════╝ ╚═╝  ╚═╝</a>
+    <div class="nav-links">
+      <a href="#demo">Demo</a>
+      <a href="#commands">Commands</a>
+      <a href="#agents">Agents</a>
+      <a href="spec.html">SKILL.md Spec</a>
+      <a href="https://github.com/Dev-kitx/pour-cli" class="nav-github">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- hero -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="badge-dot"></span>
+    Latest Release · v0.1.0
+  </div>
+
+  <pre class="ascii-logo">
+██████╗  ██████╗ ██╗   ██╗██████╗
+██╔══██╗██╔═══██╗██║   ██║██╔══██╗
+██████╔╝██║   ██║██║   ██║██████╔╝
+██╔═══╝ ██║   ██║██║   ██║██╔══██╗
+██║     ╚██████╔╝╚██████╔╝██║  ██║
+╚═╝      ╚═════╝  ╚═════╝ ╚═╝  ╚═╝</pre>
+
+  <h1>Install skills for <span>any AI agent</span><br>in one command</h1>
+  <p>pour is an open-source CLI that lets you discover and install reusable skills from any GitHub repo into Claude, Cursor, Windsurf, and more.</p>
+
+  <div class="hero-actions">
+    <a href="#demo" class="btn-primary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      See Demo
+    </a>
+    <div class="install-cmd" onclick="copyInstall(this)">
+      <span>$ brew tap Dev-kitx/pour<br>$ brew install pour</span>
+      <span class="copy-icon">⌘C</span>
+      <span class="copied">Copied!</span>
+    </div>
+  </div>
+
+  <div class="hero-agents">
+    <span>Works with</span>
+    <span class="agent-pill">Claude</span>
+    <span class="agent-pill">Cursor</span>
+    <span class="agent-pill">Windsurf</span>
+    <span class="agent-pill">Copilot</span>
+    <span class="agent-pill">+ more</span>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- demo -->
+<section class="demo-section" id="demo">
+  <div class="container">
+    <p class="section-label">Live Demo</p>
+    <h2 class="section-title fade-in">See it in action</h2>
+    <p class="section-sub fade-in">Install a skill from any public GitHub repo in seconds</p>
+
+    <div class="terminal-wrap fade-in">
+      <div class="terminal-bar">
+        <div class="t-dot red"></div>
+        <div class="t-dot yellow"></div>
+        <div class="t-dot green"></div>
+        <div class="t-title">pour — AI Skill Manager</div>
+      </div>
+      <div class="terminal-body" id="terminal-body">
+        <span class="t-cursor"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- features -->
+<section class="features-section" id="features">
+  <div class="container">
+    <p class="section-label">Why pour</p>
+    <h2 class="section-title fade-in">Everything you need</h2>
+    <p class="section-sub fade-in">A simple, fast, open-source CLI built for the way you work</p>
+
+    <div class="features-grid">
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:rgba(155,89,182,0.15)">🔌</div>
+        <h3>Any GitHub Repo</h3>
+        <p>Point pour at any public GitHub repo. It scans for SKILL.md files automatically — no fixed structure required.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:rgba(0,212,255,0.12)">⚡</div>
+        <h3>Instant Install</h3>
+        <p>Skills are copied directly to the right folder for your AI agent. No config, no setup. Just works.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:rgba(46,204,113,0.12)">🤖</div>
+        <h3>Multi-Agent</h3>
+        <p>Supports Claude, Cursor, Windsurf, Copilot, and more. Use the <code>-a</code> flag to target any agent.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:rgba(255,107,157,0.12)">🎨</div>
+        <h3>Interactive UI</h3>
+        <p>When a repo has multiple skills, pour shows a beautiful interactive picker so you can choose exactly what to install.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:rgba(241,196,15,0.12)">🌍</div>
+        <h3>No Registry</h3>
+        <p>GitHub is the registry. Anyone can host skills in their own repo. No central server to maintain or trust.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:rgba(155,89,182,0.15)">🔓</div>
+        <h3>No Auth Required</h3>
+        <p>Works out of the box with public repos — no signup, no token needed. Optionally add a GitHub token for higher rate limits.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- commands -->
+<section class="commands-section" id="commands">
+  <div class="container">
+    <p class="section-label">Commands</p>
+
+    <div class="commands-grid" style="margin-top:40px">
+      <div class="cmd-card fade-in">
+        <div class="cmd-name">pour add</div>
+        <div class="cmd-desc">Install skills from any GitHub repo</div>
+        <div class="cmd-example" onclick="copyCmd(this)">
+          <span class="cmd-text"><span>pour</span> add acme/ai-skills -a claude</span>
+          <span class="cmd-copy">copy</span>
+        </div>
+      </div>
+      <div class="cmd-card fade-in">
+        <div class="cmd-name">pour search</div>
+        <div class="cmd-desc">Discover skill repos by keyword</div>
+        <div class="cmd-example" onclick="copyCmd(this)">
+          <span class="cmd-text"><span>pour</span> search code review</span>
+          <span class="cmd-copy">copy</span>
+        </div>
+      </div>
+      <div class="cmd-card fade-in">
+        <div class="cmd-name">pour list</div>
+        <div class="cmd-desc">See all installed skills grouped by agent</div>
+        <div class="cmd-example" onclick="copyCmd(this)">
+          <span class="cmd-text"><span>pour</span> list -a claude</span>
+          <span class="cmd-copy">copy</span>
+        </div>
+      </div>
+      <div class="cmd-card fade-in">
+        <div class="cmd-name">pour update</div>
+        <div class="cmd-desc">Update all installed skills to latest version</div>
+        <div class="cmd-example" onclick="copyCmd(this)">
+          <span class="cmd-text"><span>pour</span> update</span>
+          <span class="cmd-copy">copy</span>
+        </div>
+      </div>
+      <div class="cmd-card fade-in">
+        <div class="cmd-name">pour remove</div>
+        <div class="cmd-desc">Uninstall a skill from an agent</div>
+        <div class="cmd-example" onclick="copyCmd(this)">
+          <span class="cmd-text"><span>pour</span> remove ui-design -a claude</span>
+          <span class="cmd-copy">copy</span>
+        </div>
+      </div>
+      <div class="cmd-card fade-in">
+        <div class="cmd-name">pour init</div>
+        <div class="cmd-desc">Create a new SKILL.md template to share</div>
+        <div class="cmd-example" onclick="copyCmd(this)">
+          <span class="cmd-text"><span>pour</span> init my-skill</span>
+          <span class="cmd-copy">copy</span>
+        </div>
+      </div>
+      <div class="cmd-card fade-in">
+        <div class="cmd-name">pour auth login</div>
+        <div class="cmd-desc">Add a GitHub token for higher API limits</div>
+        <div class="cmd-example" onclick="copyCmd(this)">
+          <span class="cmd-text"><span>pour</span> auth login</span>
+          <span class="cmd-copy">copy</span>
+        </div>
+      </div>
+      <div class="cmd-card fade-in">
+        <div class="cmd-name">pour add ... -g</div>
+        <div class="cmd-desc">Install a skill globally across all projects</div>
+        <div class="cmd-example" onclick="copyCmd(this)">
+          <span class="cmd-text"><span>pour</span> add owner/repo -a claude -g</span>
+          <span class="cmd-copy">copy</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- agents -->
+<section class="agents-section" id="agents">
+  <div class="container">
+    <p class="section-label">Supported Agents</p>
+    <h2 class="section-title fade-in">Works everywhere</h2>
+    <p class="section-sub fade-in">pour installs skills to the right place for each agent automatically</p>
+
+    <div class="agents-grid">
+      <div class="agent-card fade-in">
+        <img class="agent-logo" src="logos/claude.svg" alt="Claude Code" style="filter:none" onerror="this.style.display='none'">
+        <div class="agent-name">Claude Code</div><div class="agent-path">claude-code</div>
+      </div>
+      <div class="agent-card fade-in">
+        <img class="agent-logo" src="logos/cursor.svg" alt="Cursor" onerror="this.style.display='none'">
+        <div class="agent-name">Cursor</div><div class="agent-path">cursor</div>
+      </div>
+      <div class="agent-card fade-in">
+        <img class="agent-logo" src="logos/windsurf.svg" alt="Windsurf" onerror="this.style.display='none'">
+        <div class="agent-name">Windsurf</div><div class="agent-path">windsurf</div>
+      </div>
+      <div class="agent-card fade-in">
+        <img class="agent-logo" src="logos/opencode.svg" alt="OpenCode" onerror="this.style.display='none'">
+        <div class="agent-name">OpenCode</div><div class="agent-path">opencode</div>
+      </div>
+      <div class="agent-card fade-in">
+        <img class="agent-logo" src="logos/cline.svg" alt="Cline" onerror="this.style.display='none'">
+        <div class="agent-name">Cline</div><div class="agent-path">cline</div>
+      </div>
+      <div class="agent-card fade-in">
+        <img class="agent-logo" src="logos/codex.svg" alt="Codex" style="filter:none" onerror="this.style.display='none'">
+        <div class="agent-name">Codex</div><div class="agent-path">codex</div>
+      </div>
+      <div class="agent-card fade-in">
+        <img class="agent-logo" src="logos/augment.svg" alt="Augment" style="filter:none" onerror="this.style.display='none'">
+        <div class="agent-name">Augment</div><div class="agent-path">augment</div>
+      </div>
+      <div class="agent-card fade-in">
+        <img class="agent-logo" src="logos/roo.svg" alt="Roo Code" style="filter:none" onerror="this.style.display='none'">
+        <div class="agent-name">Roo Code</div><div class="agent-path">roo</div>
+      </div>
+      <div class="agent-card fade-in">
+        <img class="agent-logo" src="logos/amp.svg" alt="Amp" style="filter:none" onerror="this.style.display='none'">
+        <div class="agent-name">Amp</div><div class="agent-path">amp</div>
+      </div>
+      <div class="agent-card fade-in">
+        <img class="agent-logo" src="logos/openhands.svg" alt="OpenHands" style="filter:none" onerror="this.style.display='none'">
+        <div class="agent-name">OpenHands</div><div class="agent-path">openhands</div>
+      </div>
+      <div class="agent-card fade-in">
+        <img class="agent-logo" src="logos/tabnine.svg" alt="Tabnine" style="filter:none" onerror="this.style.display='none'">
+        <div class="agent-name">Tabnine</div><div class="agent-path">tabnine-cli</div>
+      </div>
+      <div class="agent-card fade-in">
+        <img class="agent-logo" src="https://cdn.simpleicons.org/github/ffffff" alt="GitHub Copilot" onerror="this.style.display='none'">
+        <div class="agent-name">GitHub Copilot</div><div class="agent-path">github-copilot</div>
+      </div>
+      <div class="agent-card fade-in">
+        <img class="agent-logo" src="https://cdn.simpleicons.org/googlegemini/ffffff" alt="Gemini CLI" onerror="this.style.display='none'">
+        <div class="agent-name">Gemini CLI</div><div class="agent-path">gemini-cli</div>
+      </div>
+      <div class="agent-card fade-in">
+        <svg class="agent-logo" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <div class="agent-name">Continue</div><div class="agent-path">continue</div>
+      </div>
+      <div class="agent-card fade-in" style="cursor:pointer" onclick="window.location='spec.html'">
+        <div class="agent-logo-badge" style="font-size:1.2rem">+</div>
+        <div class="agent-name">50 more</div><div class="agent-path">see spec →</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- cta -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-box fade-in">
+      <h2>Start pouring skills today</h2>
+      <p>Open source, no signup, works in 30 seconds.</p>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+        <a href="https://github.com/Dev-kitx/pour-cli" class="btn-primary">
+          View on GitHub
+        </a>
+        <div class="install-cmd" onclick="copyInstall(this)">
+          <span>$ brew tap Dev-kitx/pour<br>$ brew install pour</span>
+          <span class="copy-icon">⌘C</span>
+          <span class="copied">Copied!</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <span>Built with ❤️ by the pour community</span>
+    <div class="footer-links">
+      <a href="https://github.com/Dev-kitx/pour-cli">GitHub</a>
+      <a href="https://github.com/Dev-kitx/pour-cli/issues">Issues</a>
+      <a href="https://github.com/Dev-kitx/pour-cli/blob/main/LICENSE">License</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── dots canvas ──────────────────────────────────────────────
+const canvas = document.getElementById('dots-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, dots = [];
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', () => { resize(); initDots(); });
+
+function initDots() {
+  dots = [];
+  const count = Math.floor((W * H) / 14000);
+  for (let i = 0; i < count; i++) {
+    dots.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4,
+      r: Math.random() * 1.8 + 0.6,
+    });
+  }
+}
+initDots();
+
+const COLORS = ['#9B59B6', '#FF6B9D', '#00D4FF'];
+const LINK_DIST = 130;
+
+function drawDots() {
+  ctx.clearRect(0, 0, W, H);
+
+  for (let i = 0; i < dots.length; i++) {
+    const d = dots[i];
+    d.x += d.vx;
+    d.y += d.vy;
+    if (d.x < 0 || d.x > W) d.vx *= -1;
+    if (d.y < 0 || d.y > H) d.vy *= -1;
+
+    ctx.beginPath();
+    ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+    ctx.fillStyle = COLORS[i % COLORS.length] + '99';
+    ctx.fill();
+
+    for (let j = i + 1; j < dots.length; j++) {
+      const d2 = dots[j];
+      const dx = d.x - d2.x, dy = d.y - d2.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < LINK_DIST) {
+        const alpha = (1 - dist / LINK_DIST) * 0.18;
+        ctx.beginPath();
+        ctx.moveTo(d.x, d.y);
+        ctx.lineTo(d2.x, d2.y);
+        ctx.strokeStyle = `rgba(155,89,182,${alpha})`;
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(drawDots);
+}
+drawDots();
+
+// ── terminal demo ────────────────────────────────────────────
+const terminal = document.getElementById('terminal-body');
+
+const lines = [
+  { type: 'cmd',     text: 'pour add acme/ai-skills -a claude' },
+  { type: 'blank' },
+  { type: 'output',  text: '━━━ Installing Skills ━━━', color: '#9B59B6' },
+  { type: 'blank' },
+  { type: 'spinner', text: 'Fetching skills from acme/ai-skills ...', done: '✓ Found 1 skill(s)' },
+  { type: 'blank' },
+  { type: 'picker' },
+  { type: 'blank' },
+  { type: 'spinner', text: 'Installing  ui-design  ...', done: '✓ Installed  ui-design' },
+  { type: 'blank' },
+  { type: 'box' },
+  { type: 'blank' },
+  { type: 'cmd',     text: 'pour list' },
+  { type: 'blank' },
+  { type: 'list' },
+];
+
+const ASCII = `██████╗  ██████╗ ██╗   ██╗██████╗
+██╔══██╗██╔═══██╗██║   ██║██╔══██╗
+██████╔╝██║   ██║██║   ██║██████╔╝
+██╔═══╝ ██║   ██║██║   ██║██╔══██╗
+██║     ╚██████╔╝╚██████╔╝██║  ██║
+╚═╝      ╚═════╝  ╚═════╝ ╚═╝  ╚═╝`;
+
+function el(tag, cls, html) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (html !== undefined) e.innerHTML = html;
+  return e;
+}
+
+function appendLine(html) {
+  const cur = terminal.querySelector('.t-cursor');
+  if (cur) cur.remove();
+  const div = el('div', '', html);
+  terminal.appendChild(div);
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+function appendCursor() {
+  const cur = terminal.querySelector('.t-cursor');
+  if (cur) cur.remove();
+  const span = el('span', 't-cursor');
+  terminal.appendChild(span);
+}
+
+function typeCmd(text, cb) {
+  const div = document.createElement('div');
+  div.innerHTML = `<span class="t-prompt">❯</span> <span class="t-cmd"></span>`;
+  terminal.appendChild(div);
+  const cmdSpan = div.querySelector('.t-cmd');
+  let i = 0;
+  const interval = setInterval(() => {
+    cmdSpan.textContent += text[i++];
+    terminal.scrollTop = terminal.scrollHeight;
+    if (i >= text.length) { clearInterval(interval); setTimeout(cb, 300); }
+  }, 38);
+}
+
+function spinnerAnim(text, doneText, cb) {
+  const frames = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
+  let f = 0;
+  const div = document.createElement('div');
+  div.style.color = '#00D4FF';
+  terminal.appendChild(div);
+  const iv = setInterval(() => {
+    div.textContent = `  ${frames[f++ % frames.length]} ${text}`;
+    terminal.scrollTop = terminal.scrollHeight;
+  }, 80);
+  setTimeout(() => {
+    clearInterval(iv);
+    div.innerHTML = `  <span style="color:#2ECC71">${doneText}</span>`;
+    terminal.scrollTop = terminal.scrollHeight;
+    setTimeout(cb, 200);
+  }, 1400);
+}
+
+async function runDemo() {
+  await delay(800);
+  appendCursor();
+  await delay(600);
+
+  for (const line of lines) {
+    if (line.type === 'cmd') {
+      await new Promise(r => typeCmd(line.text, r));
+    } else if (line.type === 'blank') {
+      appendLine('&nbsp;');
+      await delay(80);
+    } else if (line.type === 'ascii') {
+      ASCII.split('\n').forEach(l => {
+        appendLine(`<span style="font-size:0.6rem;background:linear-gradient(135deg,#FF6B9D,#9B59B6,#00D4FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent">${l}</span>`);
+      });
+      await delay(100);
+    } else if (line.type === 'output') {
+      appendLine(`<span style="color:${line.color || '#888'}">${line.text}</span>`);
+      await delay(120);
+    } else if (line.type === 'spinner') {
+      await new Promise(r => spinnerAnim(line.text, line.done, r));
+    } else if (line.type === 'picker') {
+      appendLine(`<span style="color:#9B59B6">  ? Select a skill to install</span>`);
+      await delay(100);
+      appendLine(`<span style="color:#FF6B9D">  ❯ ⚡ ui-design</span>`);
+      appendLine(`<span style="color:#444">      Frontend UI design for Next.js</span>`);
+      await delay(400);
+    } else if (line.type === 'box') {
+      appendLine(`<span style="color:#2ECC71">╭──────────────────────────╮</span>`);
+      appendLine(`<span style="color:#2ECC71">│  Installation Complete!  │</span>`);
+      appendLine(`<span style="color:#2ECC71">│                          │</span>`);
+      appendLine(`<span style="color:#2ECC71">│  Agent :  </span><span style="background:#00D4FF;color:#000;padding:0 4px">claude</span>`);
+      appendLine(`<span style="color:#2ECC71">│  Skills:  </span><span style="background:#9B59B6;color:#fff;padding:0 4px">ui-design</span>`);
+      appendLine(`<span style="color:#2ECC71">╰──────────────────────────╯</span>`);
+      await delay(300);
+    } else if (line.type === 'list') {
+      appendLine(`<span style="background:#00D4FF;color:#000;padding:0 6px;border-radius:3px">claude</span>`);
+      await delay(100);
+      appendLine(`    <span style="background:#9B59B6;color:#fff;padding:0 4px;border-radius:3px">ui-design</span>  <span style="color:#666">Frontend UI design skill</span>`);
+      appendLine(`        <span style="color:#00D4FF">from </span><span style="color:#F1C40F">acme/ai-skills</span>  <span style="color:#444">2025-05-02</span>`);
+      await delay(200);
+    }
+  }
+
+  appendCursor();
+  await delay(2400);
+  terminal.innerHTML = '';
+  runDemo();
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── intersection observer for fade-ins ───────────────────────
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 80);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+// start demo when in view, loop forever
+const demoObserver = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting) {
+    runDemo();
+    demoObserver.disconnect();
+  }
+}, { threshold: 0.3 });
+demoObserver.observe(document.getElementById('terminal-body'));
+
+// ── copy install cmd ─────────────────────────────────────────
+function copyInstall(el) {
+  navigator.clipboard.writeText('brew tap Dev-kitx/pour\nbrew install pour');
+  const copied = el.querySelector('.copied');
+  const icon   = el.querySelector('.copy-icon');
+  copied.style.display = 'inline';
+  icon.style.display   = 'none';
+  setTimeout(() => {
+    copied.style.display = 'none';
+    icon.style.display   = 'inline';
+  }, 1800);
+}
+
+function copyCmd(el) {
+  const text = el.querySelector('.cmd-text').textContent.trim();
+  navigator.clipboard.writeText(text);
+  const label = el.querySelector('.cmd-copy');
+  label.textContent = '✓';
+  label.classList.add('copied');
+  setTimeout(() => {
+    label.textContent = 'copy';
+    label.classList.remove('copied');
+  }, 1800);
+}
+</script>
+</body>
+</html>

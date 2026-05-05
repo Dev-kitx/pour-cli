@@ -1,0 +1,63 @@
+version: 2
+
+project_name: pour
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: pour
+    main: .
+    binary: pour
+    ldflags:
+      - -s -w
+      - -X github.com/Dev-kitx/pour-cli/cmd.Version={{.Version}}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+
+archives:
+  - id: pour
+    builds: [pour]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: "checksums.txt"
+
+# append binaries to the release smart-gh-release already created
+release:
+  mode: append
+  skip_upload: false
+
+brews:
+  - name: pour
+    repository:
+      owner: Dev-kitx
+      name: homebrew-pour
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    commit_author:
+      name: "{{ .Env.APP_SLUG }}[bot]"
+      email: "{{ .Env.APP_ID }}+{{ .Env.APP_SLUG }}[bot]@users.noreply.github.com"
+    homepage: https://dev-kitx.github.io/pour-cli/
+    description: "Install skills for any AI agent in one command"
+    license: MIT
+    install: |
+      bin.install "pour"
+    test: |
+      system "#{bin}/pour", "version"
