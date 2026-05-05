@@ -18,7 +18,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     outputs:
-      tag: ${{ steps.smart.outputs.tag }}
+      tag: ${{ steps.smart.outputs.tag_name }}
       skipped: ${{ steps.smart.outputs.skipped }}
     steps:
       - uses: actions/checkout@v6
