@@ -26,7 +26,10 @@ var versionCmd = &cobra.Command{
 }
 
 func Execute() {
-	config.EnsurePourDir()
+	if err := config.EnsurePourDir(); err != nil {
+		ui.Error("Failed to initialize pour directory: " + err.Error())
+		os.Exit(1)
+	}
 	if err := rootCmd.Execute(); err != nil {
 		ui.Error(err.Error())
 		os.Exit(1)

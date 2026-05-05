@@ -24,7 +24,7 @@ var infoCmd = &cobra.Command{
 
 func init() {
 	infoCmd.Flags().StringVarP(&infoAgentFlag, "agent", "a", "", "agent the skill is installed for")
-	infoCmd.MarkFlagRequired("agent")
+	_ = infoCmd.MarkFlagRequired("agent")
 }
 
 func runInfo(cmd *cobra.Command, args []string) {

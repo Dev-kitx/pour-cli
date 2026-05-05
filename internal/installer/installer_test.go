@@ -31,7 +31,7 @@ func TestInstall_CreatesFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Chdir(orig)
+	defer func() { _ = os.Chdir(orig) }()
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatal(err)
 	}
@@ -60,8 +60,10 @@ func TestInstall_CreatesFile(t *testing.T) {
 func TestInstall_SanitizesFileName(t *testing.T) {
 	tmpDir := t.TempDir()
 	orig, _ := os.Getwd()
-	defer os.Chdir(orig)
-	os.Chdir(tmpDir)
+	defer func() { _ = os.Chdir(orig) }()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatal(err)
+	}
 
 	path, err := Install("My Skill", "content", "claude", false)
 	if err != nil {
@@ -75,8 +77,10 @@ func TestInstall_SanitizesFileName(t *testing.T) {
 func TestUninstall_RemovesFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	orig, _ := os.Getwd()
-	defer os.Chdir(orig)
-	os.Chdir(tmpDir)
+	defer func() { _ = os.Chdir(orig) }()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatal(err)
+	}
 
 	if _, err := Install("my-skill", "content", "claude", false); err != nil {
 		t.Fatalf("Install error: %v", err)
@@ -90,8 +94,10 @@ func TestUninstall_RemovesFile(t *testing.T) {
 func TestUninstall_MissingSkill(t *testing.T) {
 	tmpDir := t.TempDir()
 	orig, _ := os.Getwd()
-	defer os.Chdir(orig)
-	os.Chdir(tmpDir)
+	defer func() { _ = os.Chdir(orig) }()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatal(err)
+	}
 
 	err := Uninstall("ghost-skill", "claude", false)
 	if err == nil {
@@ -102,8 +108,10 @@ func TestUninstall_MissingSkill(t *testing.T) {
 func TestInstall_UnknownAgentFallback(t *testing.T) {
 	tmpDir := t.TempDir()
 	orig, _ := os.Getwd()
-	defer os.Chdir(orig)
-	os.Chdir(tmpDir)
+	defer func() { _ = os.Chdir(orig) }()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatal(err)
+	}
 
 	path, err := Install("my-skill", "content", "unknown-agent-xyz", false)
 	if err != nil {

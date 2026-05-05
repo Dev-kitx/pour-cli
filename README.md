@@ -4,6 +4,7 @@
 
 **Install skills for any AI agent in one command.**
 
+[![Latest Release](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FDev-kitx%2Fpour-cli%2Fmain%2F.github%2Fbadges%2Frelease.json&style=flat-square)](https://github.com/Dev-kitx/pour-cli/releases/latest)
 [![Go](https://img.shields.io/badge/go-1.21+-00ADD8?style=flat-square&logo=go&logoColor=white)](https://golang.org)
 [![License](https://img.shields.io/badge/license-MIT-9B59B6?style=flat-square)](LICENSE)
 [![Open Source](https://img.shields.io/badge/open%20source-yes-FF6B9D?style=flat-square)](#)
