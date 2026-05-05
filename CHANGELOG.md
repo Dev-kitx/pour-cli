@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 
 
+
+## [v0.1.4] - 2026-05-05
+
+### 🐛 Bug Fixes
+
+- ensure latest tag is updated in docs (#6) ([346a643](https://github.com/Dev-kitx/pour-cli/commit/346a643fe5c3a532d3a14393fff0cfc85c3c1961)) by @aakashbasa
+
 ## [v0.1.3] - 2026-05-05
 
 ### 🔧 Maintenance
