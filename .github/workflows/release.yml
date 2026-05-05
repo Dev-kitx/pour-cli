@@ -6,6 +6,7 @@ on:
     paths-ignore:
       - "docs/**"
       - "**.md"
+      - ".github/badges/**"
 
 permissions:
   contents: write
@@ -33,7 +34,7 @@ jobs:
 
       - name: Smart Release
         id: smart
-        uses: Dev-kitx/smart-gh-release@main
+        uses: Dev-kitx/smart-gh-release@v1
         with:
           token: ${{ steps.app-token.outputs.token }}
           auto_version: true
@@ -61,7 +62,7 @@ jobs:
       - name: Patch version in docs
         run: |
           TAG="${{ needs.release.outputs.tag }}"
-          sed -i "s/Latest Release · v[0-9][^\"]*/Latest Release · ${TAG}/g" docs/index.html
+          sed -i "s/Latest Release · v[0-9][^<]*/Latest Release · ${TAG}/g" docs/index.html
 
       - name: Commit if changed
         run: |
